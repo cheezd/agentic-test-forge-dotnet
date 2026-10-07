@@ -73,7 +73,21 @@ public class QualityGatePipelineTests
     }
 
     private static RunPlan Plan(string verb) =>
-        new(verb, "repo", ["src"], null, null, null, 30, 80, 80, "tests.csproj", null, true);
+        new(
+            verb,
+            "repo",
+            ["src"],
+            null,
+            null,
+            null,
+            30,
+            80,
+            80,
+            "tests.csproj",
+            null,
+            true,
+            ["sonar"]
+        );
 
     private sealed class ScriptedGate(string verb, GateEvaluation evaluation) : IQualityGate
     {

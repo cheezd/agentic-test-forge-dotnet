@@ -13,6 +13,7 @@ namespace AgenticTestForge.Config;
 /// <param name="TestProject">Absolute unit-test project path, when the verb resolved one.</param>
 /// <param name="AcceptanceProject">Absolute acceptance project path, when one is configured and resolved.</param>
 /// <param name="SkipGherkin">True when <c>acceptance_project</c> is omitted. Skipped Gherkin does not fail the run.</param>
+/// <param name="DrySources">Duplication source ids to run. An unknown id does not run.</param>
 internal sealed record RunPlan(
     string Verb,
     string RepoRoot,
@@ -25,5 +26,6 @@ internal sealed record RunPlan(
     double GherkinThreshold,
     string? TestProject,
     string? AcceptanceProject,
-    bool SkipGherkin
+    bool SkipGherkin,
+    IReadOnlyList<string> DrySources
 );

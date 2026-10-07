@@ -239,6 +239,7 @@ public class GherkinGateTests
             80,
             null,
             Path.Combine(root, "acceptance.csproj"),
-            false
+            false,
+            ["sonar"]
         );
 }

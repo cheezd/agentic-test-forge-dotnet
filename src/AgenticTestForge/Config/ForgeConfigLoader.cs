@@ -87,6 +87,9 @@ internal static class ForgeConfigLoader
         [JsonPropertyName("gherkin_threshold")]
         public double? GherkinThreshold { get; set; }
 
+        [JsonPropertyName("dry_sources")]
+        public List<string>? DrySources { get; set; }
+
         public string? ValidateThresholds()
         {
             if (!IsValid(CrapThreshold))
@@ -114,8 +117,22 @@ internal static class ForgeConfigLoader
                 BlankToNull(AcceptanceProject),
                 CrapThreshold ?? ForgeConfig.DefaultCrapThreshold,
                 MutationThreshold ?? ForgeConfig.DefaultMutationThreshold,
-                GherkinThreshold ?? ForgeConfig.DefaultGherkinThreshold
+                GherkinThreshold ?? ForgeConfig.DefaultGherkinThreshold,
+                Sources(DrySources)
             );
+
+        private static IReadOnlyList<string> Sources(List<string>? values)
+        {
+            if (values is null)
+            {
+                return ForgeConfig.DefaultDrySources;
+            }
+
+            return values
+                .Where(static value => !string.IsNullOrWhiteSpace(value))
+                .Select(static value => value.Trim())
+                .ToArray();
+        }
 
         private static bool IsValid(double? value) =>
             value is null || (double.IsFinite(value.Value) && value.Value >= 0);

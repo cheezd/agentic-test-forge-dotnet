@@ -27,6 +27,9 @@ internal static class GateReport
         IReadOnlyList<MutantRef> inconclusive
     ) => new GherkinGateReport(status, threshold, findings, survivors, inconclusive, true);
 
-    public static IGateReport Dry(GateStatus status, IReadOnlyList<DryFinding> findings) =>
-        new DryGateReport(status, findings);
+    public static IGateReport Dry(
+        GateStatus status,
+        IReadOnlyList<DryFinding> findings,
+        DuplicationsCondition? condition = null
+    ) => new DryGateReport(status, findings, condition);
 }
