@@ -7,7 +7,7 @@ namespace AgenticTestForge.Config;
 /// <param name="CrapThreshold">CRAP ceiling. Default is 30.</param>
 /// <param name="MutationThreshold">Mutation kill-rate floor. Default is 80.</param>
 /// <param name="GherkinThreshold">Gherkin mutation floor. Default is 80.</param>
-/// <param name="DrySources">Duplication source ids. Default is <c>sonar</c>.</param>
+/// <param name="DrySources">Duplication source ids. Default is <c>sonar</c> and <c>jaccard</c>.</param>
 internal sealed record ForgeConfig(
     IReadOnlyList<string> Paths,
     string? TestProject,
@@ -22,5 +22,5 @@ internal sealed record ForgeConfig(
     public const double DefaultMutationThreshold = 80;
     public const double DefaultGherkinThreshold = 80;
 
-    public static IReadOnlyList<string> DefaultDrySources { get; } = ["sonar"];
+    public static IReadOnlyList<string> DefaultDrySources { get; } = ["sonar", "jaccard"];
 }

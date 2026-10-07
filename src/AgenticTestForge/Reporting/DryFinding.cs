@@ -8,6 +8,7 @@ namespace AgenticTestForge.Reporting;
 /// <param name="DuplicateFilepath">Second file of a pair.</param>
 /// <param name="DuplicateOf">Second member of a pair.</param>
 /// <param name="Source">Source id, such as <c>sonar</c> or <c>jaccard</c>.</param>
+/// <param name="Similarity">Jaccard score for a structural pair, rounded to two decimals.</param>
 internal sealed record DryFinding(
     bool Advisory,
     string? SonarIssueKey,
@@ -15,5 +16,6 @@ internal sealed record DryFinding(
     string? QualifiedName,
     string? DuplicateFilepath,
     string? DuplicateOf,
-    string? Source = null
+    string? Source = null,
+    double? Similarity = null
 );

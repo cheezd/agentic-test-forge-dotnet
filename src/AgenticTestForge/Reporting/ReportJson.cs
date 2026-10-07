@@ -97,6 +97,7 @@ internal static class ReportJson
                     ["duplicate_filepath"] = NullOrString(finding.DuplicateFilepath),
                     ["duplicate_of"] = NullOrString(finding.DuplicateOf),
                     ["source"] = NullOrString(finding.Source),
+                    ["similarity_score"] = NullOrNumber(finding.Similarity),
                 }
             );
         }
