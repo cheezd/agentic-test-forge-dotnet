@@ -41,59 +41,17 @@ internal static class ForgeArgs
                 return ParsedArgs.Failed(readError);
             }
 
-            switch (option)
+            var error = option switch
             {
-                case "--base":
-                    if (baseRef is not null)
-                    {
-                        return ParsedArgs.Failed("Option '--base' was specified more than once.");
-                    }
-
-                    if (value.Length == 0)
-                    {
-                        return ParsedArgs.Failed("Option '--base' requires a git ref.");
-                    }
-
-                    baseRef = value;
-                    break;
-                case "--path":
-                    if (value.Length == 0)
-                    {
-                        return ParsedArgs.Failed("Option '--path' requires a path.");
-                    }
-
-                    paths.Add(value);
-                    break;
-                case "--json":
-                    if (jsonPath is not null)
-                    {
-                        return ParsedArgs.Failed("Option '--json' was specified more than once.");
-                    }
-
-                    if (value.Length == 0)
-                    {
-                        return ParsedArgs.Failed("Option '--json' requires a file path.");
-                    }
-
-                    jsonPath = value;
-                    break;
-                case "--threshold":
-                    if (threshold is not null)
-                    {
-                        return ParsedArgs.Failed(
-                            "Option '--threshold' was specified more than once."
-                        );
-                    }
-
-                    if (!TryParseThreshold(value, out var parsedThreshold, out var thresholdError))
-                    {
-                        return ParsedArgs.Failed(thresholdError);
-                    }
-
-                    threshold = parsedThreshold;
-                    break;
-                default:
-                    return ParsedArgs.Failed($"Unknown option '{option}'.");
+                "--base" => TakeBase(ref baseRef, value),
+                "--path" => TakePath(paths, value),
+                "--json" => TakeJson(ref jsonPath, value),
+                "--threshold" => TakeThreshold(ref threshold, value),
+                _ => $"Unknown option '{option}'.",
+            };
+            if (error is not null)
+            {
+                return ParsedArgs.Failed(error);
             }
         }
 
@@ -103,6 +61,65 @@ internal static class ForgeArgs
         }
 
         return new ParsedArgs(false, verb, baseRef, paths, jsonPath, threshold, null);
+    }
+
+    private static string? TakeBase(ref string? baseRef, string value)
+    {
+        if (baseRef is not null)
+        {
+            return "Option '--base' was specified more than once.";
+        }
+
+        if (value.Length == 0)
+        {
+            return "Option '--base' requires a git ref.";
+        }
+
+        baseRef = value;
+        return null;
+    }
+
+    private static string? TakePath(List<string> paths, string value)
+    {
+        if (value.Length == 0)
+        {
+            return "Option '--path' requires a path.";
+        }
+
+        paths.Add(value);
+        return null;
+    }
+
+    private static string? TakeJson(ref string? jsonPath, string value)
+    {
+        if (jsonPath is not null)
+        {
+            return "Option '--json' was specified more than once.";
+        }
+
+        if (value.Length == 0)
+        {
+            return "Option '--json' requires a file path.";
+        }
+
+        jsonPath = value;
+        return null;
+    }
+
+    private static string? TakeThreshold(ref double? threshold, string value)
+    {
+        if (threshold is not null)
+        {
+            return "Option '--threshold' was specified more than once.";
+        }
+
+        if (!TryParseThreshold(value, out var parsedThreshold, out var thresholdError))
+        {
+            return thresholdError;
+        }
+
+        threshold = parsedThreshold;
+        return null;
     }
 
     private static void SplitOption(string token, out string option, out string? inline)

@@ -264,6 +264,55 @@ public class CrapMemberScorerTests
         Assert.False(nested.AboveThreshold);
     }
 
+    [Fact]
+    public void MatchesPropertyGettersFromCoberturaNames()
+    {
+        var coverage = CoberturaCoverage.Parse(
+            """
+            <coverage>
+              <packages>
+                <package>
+                  <classes>
+                    <class name="AgenticTestForge.Reporting.GherkinGateReport" filename="src/GherkinGateReport.cs">
+                      <methods>
+                        <method name="get_Name">
+                          <lines>
+                            <line number="8" hits="1" />
+                          </lines>
+                        </method>
+                      </methods>
+                    </class>
+                  </classes>
+                </package>
+              </packages>
+            </coverage>
+            """
+        );
+
+        var finding = Assert.Single(
+            CrapMemberScorer.Score(
+                [
+                    new CrapToolMethod(
+                        "AgenticTestForge.Reporting",
+                        "GherkinGateReport",
+                        "Name.get",
+                        "AgenticTestForge.Reporting.GherkinGateReport.Name.get",
+                        @"C:\repo\src\GherkinGateReport.cs",
+                        1d
+                    ),
+                ],
+                coverage,
+                30d,
+                @"C:\repo",
+                ["src"],
+                null
+            )
+        );
+        Assert.Equal(1d, finding.Coverage);
+        Assert.Equal(1d, finding.CrapScore);
+        Assert.False(finding.AboveThreshold);
+    }
+
     private static CrapToolMethod Method(
         string name,
         double complexity,

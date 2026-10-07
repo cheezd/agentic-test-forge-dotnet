@@ -17,7 +17,15 @@ internal static class GateReport
     ) => new MutationGateReport(status, threshold, findings, survivors, inconclusive);
 
     public static IGateReport Gherkin(double threshold, GateStatus status) =>
-        new GherkinGateReport(status, threshold);
+        new GherkinGateReport(status, threshold, [], [], [], false);
+
+    public static IGateReport Gherkin(
+        double threshold,
+        GateStatus status,
+        IReadOnlyList<GherkinFinding> findings,
+        IReadOnlyList<MutantRef> survivors,
+        IReadOnlyList<MutantRef> inconclusive
+    ) => new GherkinGateReport(status, threshold, findings, survivors, inconclusive, true);
 
     public static IGateReport Dry(GateStatus status, IReadOnlyList<DryFinding> findings) =>
         new DryGateReport(status, findings);
