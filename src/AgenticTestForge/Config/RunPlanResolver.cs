@@ -60,7 +60,8 @@ internal static class RunPlanResolver
                 gherkin,
                 testProject.Path,
                 acceptance.Path,
-                acceptance.SkipGherkin
+                acceptance.SkipGherkin,
+                config.DrySources
             )
         );
     }

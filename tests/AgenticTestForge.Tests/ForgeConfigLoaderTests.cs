@@ -59,6 +59,29 @@ public class ForgeConfigLoaderTests
         Assert.Equal(80, config.MutationThreshold);
         Assert.Equal(80, config.GherkinThreshold);
         Assert.Null(config.AcceptanceProject);
+        Assert.Equal(ForgeConfig.DefaultDrySources, config.DrySources);
+    }
+
+    [Fact]
+    public void DrySourcesKeepAnEmptyListAndANamedReplacement()
+    {
+        using var root = new TempDirectory();
+        root.Write(
+            "forge.json",
+            """
+            { "dry_sources": ["sonar", "jaccard", " "] }
+            """
+        );
+
+        var listed = ForgeConfigLoader.Load(root.Path).Config!;
+
+        Assert.Equal(["sonar", "jaccard"], listed.DrySources);
+
+        root.Write("forge.json", """{ "dry_sources": [] }""");
+
+        var empty = ForgeConfigLoader.Load(root.Path).Config!;
+
+        Assert.Empty(empty.DrySources);
     }
 
     [Fact]

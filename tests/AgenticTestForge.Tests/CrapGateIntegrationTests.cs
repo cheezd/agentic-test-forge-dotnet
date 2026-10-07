@@ -71,7 +71,8 @@ public class CrapGateIntegrationTests
             80d,
             null,
             null,
-            true
+            true,
+            ForgeConfig.DefaultDrySources
         );
 
         var evaluation = AgenticTestForge.Crap.CrapGate.Evaluate(plan);

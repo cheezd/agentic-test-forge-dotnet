@@ -96,6 +96,7 @@ internal static class ReportJson
                     ["qualified_name"] = NullOrString(finding.QualifiedName),
                     ["duplicate_filepath"] = NullOrString(finding.DuplicateFilepath),
                     ["duplicate_of"] = NullOrString(finding.DuplicateOf),
+                    ["source"] = NullOrString(finding.Source),
                 }
             );
         }
