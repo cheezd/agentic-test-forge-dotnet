@@ -3,7 +3,11 @@ namespace AgenticTestForge.Dry;
 /// <summary>Registered duplication sources. Add a source here to make its id selectable.</summary>
 internal static class DrySourceCatalog
 {
-    private static readonly IDrySource[] Registered = [new SonarDrySource()];
+    private static readonly IDrySource[] Registered =
+    [
+        new SonarDrySource(),
+        new JaccardDrySource(),
+    ];
 
     public static IReadOnlyList<IDrySource> Select(IReadOnlyList<string> ids)
     {

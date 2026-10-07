@@ -80,9 +80,9 @@ public class DrySourceTests
     }
 
     [Fact]
-    public void JaccardAloneSkipsUntilItIsRegistered()
+    public void AnUnknownSourceSkips()
     {
-        var evaluation = DryGate.Evaluate(Plan() with { DrySources = ["jaccard"] });
+        var evaluation = DryGate.Evaluate(Plan() with { DrySources = ["cpd"] });
 
         Assert.Null(evaluation.Error);
         Assert.Equal(GateStatus.Skipped, evaluation.Report.Status);
@@ -99,9 +99,9 @@ public class DrySourceTests
     [Fact]
     public void AnUnregisteredSourceDoesNotRun()
     {
-        Assert.Empty(DrySourceCatalog.Select(["jaccard"]));
+        Assert.Empty(DrySourceCatalog.Select(["cpd"]));
         Assert.Equal(
-            ["sonar"],
+            ["sonar", "jaccard"],
             DrySourceCatalog.Select(["Sonar", "jaccard"]).Select(static source => source.Id)
         );
     }
