@@ -41,6 +41,27 @@ internal static class ReportJson
         return array;
     }
 
+    public static JsonArray GherkinFindings(IReadOnlyList<GherkinFinding> findings)
+    {
+        var array = new JsonArray();
+        foreach (var finding in findings)
+        {
+            array.Add(
+                new JsonObject
+                {
+                    ["scenario"] = finding.Scenario,
+                    ["filepath"] = finding.Filepath,
+                    ["score"] = finding.Score,
+                    ["killed"] = finding.Killed,
+                    ["total"] = finding.Total,
+                    ["above_threshold"] = finding.AboveThreshold,
+                }
+            );
+        }
+
+        return array;
+    }
+
     public static JsonArray MutationFindings(IReadOnlyList<MutationFinding> findings)
     {
         var array = new JsonArray();

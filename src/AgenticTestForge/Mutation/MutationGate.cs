@@ -10,46 +10,68 @@ internal static class MutationGate
     {
         if (plan.ScopedFiles is { Count: 0 })
         {
-            return MutationEvaluation.Ok(
-                Gate(
-                    plan,
-                    MutationScorer.Score([], plan.MutationThreshold, plan.RepoRoot, plan.Paths, [])
-                )
-            );
+            return Passed(plan);
         }
 
         if (string.IsNullOrWhiteSpace(plan.TestProject))
         {
-            return MutationEvaluation.ToolError(
-                plan.MutationThreshold,
-                "test_project is missing from forge.json."
-            );
+            return MissingProject(plan);
         }
 
         var testDirectory = Path.GetDirectoryName(plan.TestProject);
         if (string.IsNullOrEmpty(testDirectory))
         {
-            return MutationEvaluation.ToolError(
-                plan.MutationThreshold,
-                "test_project is missing from forge.json."
-            );
+            return MissingProject(plan);
         }
 
         var projectName = ProjectSelector.Select(plan.TestProject!, plan.RepoRoot, plan.Paths);
         if (projectName.Error is not null)
         {
-            return MutationEvaluation.ToolError(plan.MutationThreshold, projectName.Error);
+            return ToolError(plan, projectName.Error);
         }
 
         var tool = StrykerTool.EnsureInstalled(plan.RepoRoot);
         if (tool.Error is not null || tool.Exe is null)
         {
-            return MutationEvaluation.ToolError(
-                plan.MutationThreshold,
-                tool.Error ?? "Stryker.NET 5.0.0 could not be installed."
-            );
+            return ToolError(plan, tool.Error ?? "Stryker.NET 5.0.0 could not be installed.");
         }
 
+        return RunAndScore(plan, tool.Exe, testDirectory, projectName.Name);
+    }
+
+    private static MutationEvaluation MissingProject(RunPlan plan) =>
+        ToolError(plan, "test_project is missing from forge.json.");
+
+    private static MutationEvaluation ToolError(RunPlan plan, string message) =>
+        MutationEvaluation.ToolError(plan.MutationThreshold, message);
+
+    private static MutationEvaluation Passed(RunPlan plan) => Scored(plan, [], []);
+
+    private static MutationEvaluation Scored(
+        RunPlan plan,
+        IReadOnlyList<StrykerFile> files,
+        IReadOnlyList<string>? scopedFiles
+    ) =>
+        MutationEvaluation.Ok(
+            Gate(
+                plan,
+                MutationScorer.Score(
+                    files,
+                    plan.MutationThreshold,
+                    plan.RepoRoot,
+                    plan.Paths,
+                    scopedFiles
+                )
+            )
+        );
+
+    private static MutationEvaluation RunAndScore(
+        RunPlan plan,
+        string exe,
+        string testDirectory,
+        string? projectName
+    )
+    {
         var output = Path.Combine(
             Path.GetTempPath(),
             "agentic-test-forge",
@@ -58,57 +80,45 @@ internal static class MutationGate
         try
         {
             var run = StrykerTool.Run(
-                tool.Exe,
+                exe,
                 testDirectory,
                 output,
-                projectName.Name,
+                projectName,
                 plan.BaseRef,
                 MutateGlobs(plan)
             );
             if (run.Error is not null || run.Report is null)
             {
-                return MutationEvaluation.ToolError(
-                    plan.MutationThreshold,
-                    run.Error ?? "Stryker.NET analysis failed."
-                );
+                return ToolError(plan, run.Error ?? "Stryker.NET analysis failed.");
             }
 
-            IReadOnlyList<StrykerFile> files;
-            try
+            var files = ReadReport(run.Report);
+            if (files.Error is not null)
             {
-                files = StrykerReport.Parse(File.ReadAllText(run.Report));
-            }
-            catch (System.Text.Json.JsonException)
-            {
-                return MutationEvaluation.ToolError(
-                    plan.MutationThreshold,
-                    "Stryker.NET analysis failed."
-                );
-            }
-            catch (IOException)
-            {
-                return MutationEvaluation.ToolError(
-                    plan.MutationThreshold,
-                    "Stryker.NET analysis failed."
-                );
+                return ToolError(plan, files.Error);
             }
 
-            return MutationEvaluation.Ok(
-                Gate(
-                    plan,
-                    MutationScorer.Score(
-                        files,
-                        plan.MutationThreshold,
-                        plan.RepoRoot,
-                        plan.Paths,
-                        plan.ScopedFiles
-                    )
-                )
-            );
+            return Scored(plan, files.Files!, plan.ScopedFiles);
         }
         finally
         {
             PinnedDotnetTool.TryDeleteDirectory(output);
+        }
+    }
+
+    private static (IReadOnlyList<StrykerFile>? Files, string? Error) ReadReport(string path)
+    {
+        try
+        {
+            return (StrykerReport.Parse(File.ReadAllText(path)), null);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return (null, "Stryker.NET analysis failed.");
+        }
+        catch (IOException)
+        {
+            return (null, "Stryker.NET analysis failed.");
         }
     }
 

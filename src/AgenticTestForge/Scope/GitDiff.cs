@@ -38,12 +38,19 @@ internal static class GitDiff
             return (null, "git executable was not found.");
         }
 
-        var stdout = process.StandardOutput.ReadToEnd();
-        var stderr = process.StandardError.ReadToEnd();
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
         process.WaitForExit();
+        var stdout = stdoutTask.GetAwaiter().GetResult();
+        var stderr = stderrTask.GetAwaiter().GetResult();
         if (process.ExitCode != 0)
         {
-            var detail = string.IsNullOrWhiteSpace(stderr) ? "git diff failed." : stderr.Trim();
+            var detail = FirstLine(stderr);
+            if (detail.Length == 0)
+            {
+                detail = "git diff failed.";
+            }
+
             return (null, $"git diff failed for base ref '{baseRef}': {detail}");
         }
 
@@ -52,5 +59,19 @@ internal static class GitDiff
             StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
         );
         return (files, null);
+    }
+
+    private static string FirstLine(string text)
+    {
+        foreach (var line in text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+        {
+            var trimmed = line.Trim();
+            if (trimmed.Length > 0)
+            {
+                return trimmed;
+            }
+        }
+
+        return "";
     }
 }

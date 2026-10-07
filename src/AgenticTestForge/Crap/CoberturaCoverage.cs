@@ -126,12 +126,34 @@ internal sealed class CoberturaCoverage
     private static IEnumerable<string> MethodNames(string className, string methodName)
     {
         yield return methodName;
+        if (Accessor(methodName, ".get", "get_") is string getter)
+        {
+            yield return getter;
+        }
+        else if (Accessor(methodName, ".set", "set_") is string setter)
+        {
+            yield return setter;
+        }
+
         var split = className.LastIndexOfAny(['/', '+', '.']);
         var simple = split < 0 ? className : className[(split + 1)..];
         if (methodName.Equals(simple, StringComparison.Ordinal))
         {
             yield return ".ctor";
         }
+    }
+
+    private static string? Accessor(string methodName, string suffix, string prefix)
+    {
+        if (
+            !methodName.EndsWith(suffix, StringComparison.Ordinal)
+            || methodName.Length == suffix.Length
+        )
+        {
+            return null;
+        }
+
+        return prefix + methodName[..^suffix.Length];
     }
 
     private void Add(Dictionary<int, bool> combined, string key)

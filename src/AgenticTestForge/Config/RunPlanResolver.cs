@@ -29,47 +29,22 @@ internal static class RunPlanResolver
         var root = loaded.RepoRoot;
         var paths = parsed.Paths.Count > 0 ? parsed.Paths : config.Paths;
         var (crap, mutation, gherkin) = Thresholds(parsed, config);
-
-        string? testProject = null;
-        if (RequiresTestProject(parsed.Verb))
+        var testProject = ResolveTestProject(parsed.Verb, config, root);
+        if (testProject.Error is not null)
         {
-            if (config.TestProject is null)
-            {
-                return ResolveOutcome.Failed("test_project is missing from forge.json.");
-            }
-
-            testProject = ResolveFile(root, config.TestProject);
-            if (testProject is null)
-            {
-                return ResolveOutcome.Failed($"test_project '{config.TestProject}' was not found.");
-            }
+            return ResolveOutcome.Failed(testProject.Error);
         }
 
-        var skipGherkin = config.AcceptanceProject is null;
-        string? acceptanceProject = null;
-        if (!skipGherkin && UsesAcceptanceProject(parsed.Verb))
+        var acceptance = ResolveAcceptanceProject(parsed.Verb, config, root);
+        if (acceptance.Error is not null)
         {
-            acceptanceProject = ResolveFile(root, config.AcceptanceProject!);
-            if (acceptanceProject is null)
-            {
-                return ResolveOutcome.Failed(
-                    $"acceptance_project '{config.AcceptanceProject}' was not found."
-                );
-            }
+            return ResolveOutcome.Failed(acceptance.Error);
         }
 
-        IReadOnlyList<string>? scopedFiles = null;
-        if (parsed.BaseRef is not null)
+        var scopedFiles = Scope(parsed, root, paths, changedFiles);
+        if (scopedFiles.Error is not null)
         {
-            var diff = changedFiles(root, parsed.BaseRef);
-            if (diff.Error is not null || diff.Files is null)
-            {
-                return ResolveOutcome.Failed(
-                    diff.Error ?? $"git diff failed for base ref '{parsed.BaseRef}'."
-                );
-            }
-
-            scopedFiles = Filter(diff.Files, paths);
+            return ResolveOutcome.Failed(scopedFiles.Error);
         }
 
         return ResolveOutcome.Ok(
@@ -78,16 +53,81 @@ internal static class RunPlanResolver
                 root,
                 paths,
                 parsed.BaseRef,
-                scopedFiles,
+                scopedFiles.Files,
                 parsed.JsonPath,
                 crap,
                 mutation,
                 gherkin,
-                testProject,
-                acceptanceProject,
-                skipGherkin
+                testProject.Path,
+                acceptance.Path,
+                acceptance.SkipGherkin
             )
         );
+    }
+
+    private static (string? Path, string? Error) ResolveTestProject(
+        string verb,
+        ForgeConfig config,
+        string repoRoot
+    )
+    {
+        if (!RequiresTestProject(verb))
+        {
+            return (null, null);
+        }
+
+        if (config.TestProject is null)
+        {
+            return (null, "test_project is missing from forge.json.");
+        }
+
+        var full = ResolveFile(repoRoot, config.TestProject);
+        return full is null
+            ? (null, $"test_project '{config.TestProject}' was not found.")
+            : (full, null);
+    }
+
+    private static (string? Path, string? Error, bool SkipGherkin) ResolveAcceptanceProject(
+        string verb,
+        ForgeConfig config,
+        string repoRoot
+    )
+    {
+        if (config.AcceptanceProject is null)
+        {
+            return (null, null, true);
+        }
+
+        if (!UsesAcceptanceProject(verb))
+        {
+            return (null, null, false);
+        }
+
+        var full = ResolveFile(repoRoot, config.AcceptanceProject);
+        return full is null
+            ? (null, $"acceptance_project '{config.AcceptanceProject}' was not found.", false)
+            : (full, null, false);
+    }
+
+    private static (IReadOnlyList<string>? Files, string? Error) Scope(
+        ParsedArgs parsed,
+        string repoRoot,
+        IReadOnlyList<string> paths,
+        Func<string, string, (IReadOnlyList<string>? Files, string? Error)> changedFiles
+    )
+    {
+        if (parsed.BaseRef is null)
+        {
+            return (null, null);
+        }
+
+        var diff = changedFiles(repoRoot, parsed.BaseRef);
+        if (diff.Error is not null || diff.Files is null)
+        {
+            return (null, diff.Error ?? $"git diff failed for base ref '{parsed.BaseRef}'.");
+        }
+
+        return (Filter(diff.Files, paths), null);
     }
 
     private static bool RequiresTestProject(string verb) =>

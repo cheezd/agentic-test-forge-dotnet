@@ -41,4 +41,4 @@ The test project must reference `coverlet.collector`. This tool installs Crap4Do
 
 `--threshold` applies to `crap`, `mutate`, and `mutate-gherkin`. `forge check` uses `crap_threshold` and `mutation_threshold` from `forge.json`. A CRAP score equal to the ceiling passes. A kill rate equal to the floor passes.
 
-Until `mutate-gherkin` exists, `forge check` records Gherkin as skipped. `forge dry` stays advisory and does not change the exit code. With Sonar unconfigured, DRY is skipped.
+With no `acceptance_project`, `forge check` records Gherkin as skipped. With one set, `mutate-gherkin` mutates Reqnroll Examples cells and fails when the kill rate is under the floor or a step binding is missing. `forge dry` stays advisory and does not change the exit code. With Sonar unconfigured, DRY is skipped.
