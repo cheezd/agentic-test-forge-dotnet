@@ -1,0 +1,9 @@
+<Solution>
+    <Folder Name="/src/">
+        <Project Path="src/AgenticTestForge.Cli/AgenticTestForge.Cli.csproj" />
+        <Project Path="src/AgenticTestForge/AgenticTestForge.csproj" />
+    </Folder>
+    <Folder Name="/tests/">
+        <Project Path="tests/AgenticTestForge.Tests/AgenticTestForge.Tests.csproj" />
+    </Folder>
+</Solution>
