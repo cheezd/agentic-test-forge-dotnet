@@ -1,0 +1,5 @@
+{
+  "paths": ["src/AgenticTestForge", "src/AgenticTestForge.Cli"],
+  "test_project": "tests/AgenticTestForge.Tests/AgenticTestForge.Tests.csproj",
+  "crap_threshold": 30
+}

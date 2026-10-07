@@ -1,0 +1,15 @@
+root = true
+
+[*]
+charset = utf-8
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+
+[*.{cs,csx}]
+dotnet_diagnostic.IDE0055.severity = none
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_expression_bodied_methods = when_on_single_line:warning
+
+[*.{json,props,targets,csproj}]
+indent_size = 2
