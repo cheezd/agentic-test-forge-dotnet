@@ -6,7 +6,13 @@ namespace AgenticTestForge.Mutation;
 
 internal static class MutationGate
 {
-    public static MutationEvaluation Evaluate(RunPlan plan)
+    public static MutationEvaluation Evaluate(RunPlan plan) =>
+        Evaluate(plan, ProjectSelector.Select);
+
+    internal static MutationEvaluation Evaluate(
+        RunPlan plan,
+        Func<string, string, IReadOnlyList<string>, (string? Name, string? Error)> selectProject
+    )
     {
         if (plan.ScopedFiles is { Count: 0 })
         {
@@ -24,7 +30,11 @@ internal static class MutationGate
             return MissingProject(plan);
         }
 
-        var projectName = ProjectSelector.Select(plan.TestProject!, plan.RepoRoot, plan.Paths);
+        var projectName = selectProject(
+            plan.TestProject!,
+            plan.RepoRoot,
+            plan.ScopedFiles is { Count: > 0 } ? plan.ScopedFiles : plan.Paths
+        );
         if (projectName.Error is not null)
         {
             return ToolError(plan, projectName.Error);
