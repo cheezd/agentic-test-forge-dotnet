@@ -13,6 +13,7 @@
     <RepositoryUrl>https://github.com/cheezd/agentic-test-forge-dotnet</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>1.0.1 selects the mutation project from the changed files when the diff is non-empty. A test project that references more than one forge.json path no longer exits 2 before Stryker when those changes belong to one referenced project. An empty diff still passes without selecting a project. A diff that spans two referenced projects still exits 2.</PackageReleaseNotes>
     <PackageOutputPath>$(MSBuildThisFileDirectory)..\..\artifacts\</PackageOutputPath>
   </PropertyGroup>
 
