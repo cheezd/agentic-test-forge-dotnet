@@ -119,6 +119,44 @@ public class MutationScorerTests
     }
 
     [Fact]
+    public void IgnoredMutantsStayOutOfTheScore()
+    {
+        var score = MutationScorer.Score(
+            [
+                File([
+                    Mutant("Killed", "Arithmetic mutation"),
+                    Mutant("Killed", "Arithmetic mutation"),
+                    Mutant("Killed", "Arithmetic mutation"),
+                    Mutant("Killed", "Arithmetic mutation"),
+                    Mutant("Ignored", "Block removal mutation"),
+                ]),
+            ],
+            80,
+            @"C:\repo",
+            ["src"],
+            null
+        );
+
+        Assert.Equal(GateStatus.Pass, score.Status);
+        var finding = Assert.Single(score.Findings);
+        Assert.Equal(100d, finding.Score);
+        Assert.Equal(4, finding.Killed);
+        Assert.Equal(4, finding.Total);
+        Assert.Empty(score.Inconclusive);
+        Assert.Empty(score.Survivors);
+
+        var onlyIgnored = MutationScorer.Score(
+            [File([Mutant("Ignored", "Block removal mutation")])],
+            80,
+            @"C:\repo",
+            ["src"],
+            null
+        );
+        Assert.Equal(GateStatus.Pass, onlyIgnored.Status);
+        Assert.Empty(onlyIgnored.Findings);
+    }
+
+    [Fact]
     public void NoCoverageIsInconclusive()
     {
         var score = MutationScorer.Score(
