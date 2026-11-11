@@ -43,6 +43,11 @@ internal static class MutationScorer
             var open = 0;
             foreach (var mutant in file.Mutants)
             {
+                if (IsIgnored(mutant.Status))
+                {
+                    continue;
+                }
+
                 var member = MemberLocator.Find(file.Source, mutant.Line);
                 var reference = new MutantRef(relative, member, mutant.Mutator);
                 if (IsKilled(mutant.Status))
@@ -92,6 +97,9 @@ internal static class MutationScorer
 
     private static bool IsSurvived(string status) =>
         status.Equals("Survived", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsIgnored(string status) =>
+        status.Equals("Ignored", StringComparison.OrdinalIgnoreCase);
 
     private static string Relative(string filePath, string repoRoot)
     {
